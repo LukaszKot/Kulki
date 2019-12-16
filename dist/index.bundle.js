@@ -86,14 +86,27 @@
 /************************************************************************/
 /******/ ({
 
+/***/ "./src/Balls.ts":
+/*!**********************!*\
+  !*** ./src/Balls.ts ***!
+  \**********************/
+/*! exports provided: Balls */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+eval("__webpack_require__.r(__webpack_exports__);\n/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, \"Balls\", function() { return Balls; });\nvar Balls = /** @class */ (function () {\r\n    function Balls() {\r\n        this.n = 9;\r\n        this.points = 0;\r\n        this.availibleColors = [\"red\", \"green\", \"blue\", \"yellow\", \"pink\", \"black\", \"purple\"];\r\n        this.nextBallsColors = [\"red\", \"green\", \"blue\"];\r\n    }\r\n    Balls.prototype.render = function () {\r\n        this.renderBoard();\r\n        this.renderPoints();\r\n        this.renderNextBallsColors();\r\n    };\r\n    Balls.prototype.renderBoard = function () {\r\n        var _a;\r\n        (_a = document.getElementsByClassName(\"board\")[0]) === null || _a === void 0 ? void 0 : _a.remove();\r\n        var board = document.createElement(\"div\");\r\n        board.classList.add(\"board\");\r\n        for (var i = 0; i < this.n; i++) {\r\n            for (var j = 0; j < this.n; j++) {\r\n                var field = document.createElement(\"div\");\r\n                field.classList.add(\"field\");\r\n                board.appendChild(field);\r\n            }\r\n        }\r\n        document.body.appendChild(board);\r\n    };\r\n    Balls.prototype.renderPoints = function () {\r\n        var _a;\r\n        (_a = document.getElementsByClassName(\"points\")[0]) === null || _a === void 0 ? void 0 : _a.remove();\r\n        var pointsDiv = document.createElement(\"div\");\r\n        pointsDiv.innerHTML = \"Punkty: \" + this.points + \" \";\r\n        pointsDiv.classList.add(\"points\");\r\n        document.body.appendChild(pointsDiv);\r\n    };\r\n    Balls.prototype.renderNextBallsColors = function () {\r\n        var _this = this;\r\n        var _a;\r\n        (_a = document.getElementsByClassName(\"nextBalls\")[0]) === null || _a === void 0 ? void 0 : _a.remove();\r\n        var nextBallsDiv = document.createElement(\"div\");\r\n        this.nextBallsColors.forEach(function (element) {\r\n            var ball = _this.getBallElement(element);\r\n            nextBallsDiv.appendChild(ball);\r\n        });\r\n        nextBallsDiv.classList.add(\"nextBalls\");\r\n        document.body.appendChild(nextBallsDiv);\r\n    };\r\n    Balls.prototype.getBallElement = function (color) {\r\n        var element = document.createElement(\"div\");\r\n        element.classList.add(\"ball\");\r\n        element.style.backgroundColor = color;\r\n        return element;\r\n    };\r\n    return Balls;\r\n}());\r\n\r\n\n\n//# sourceURL=webpack:///./src/Balls.ts?");
+
+/***/ }),
+
 /***/ "./src/index.ts":
 /*!**********************!*\
   !*** ./src/index.ts ***!
   \**********************/
-/*! no static exports found */
-/***/ (function(module, exports) {
+/*! no exports provided */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
 
-eval("console.log(\"xD\");\r\n\n\n//# sourceURL=webpack:///./src/index.ts?");
+"use strict";
+eval("__webpack_require__.r(__webpack_exports__);\n/* harmony import */ var _Balls__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./Balls */ \"./src/Balls.ts\");\n\r\ndocument.addEventListener(\"DOMContentLoaded\", function (e) {\r\n    var balls = new _Balls__WEBPACK_IMPORTED_MODULE_0__[\"Balls\"]();\r\n    balls.render();\r\n});\r\n\n\n//# sourceURL=webpack:///./src/index.ts?");
 
 /***/ })
 

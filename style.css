@@ -1,0 +1,54 @@
+body
+{
+    margin: 0;
+    padding: 0;
+}
+
+.board
+{
+    width: 450px;
+    height: 450px;
+    border: 1px solid black;
+    display: flex;
+    flex-wrap: wrap;
+    flex-direction: row;
+    margin: 100px auto 10px auto;
+}
+
+.field
+{
+    border: 1px solid black;
+    width: 48px;
+    height: 48px;
+    cursor: pointer;
+}
+
+.points{
+    border: 1px solid black;
+    width: 400px;
+    height: 60px;
+    padding: 25px;
+    margin: 0 auto;
+    text-align: center;
+    font-size: 50px;
+}
+
+.nextBalls
+{
+    margin: 10px auto;
+    width: 410px;
+    height: 50px;
+    padding: 20px;
+    border: 1px solid black;
+    display: flex;
+    justify-content: center;
+}
+
+.ball
+{
+    width: 38px;
+    height: 38px;
+    border-radius: 20px;
+    margin: 5px;
+    border: 2px solid black;
+}
