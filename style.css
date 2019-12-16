@@ -20,7 +20,6 @@ body
     border: 1px solid black;
     width: 48px;
     height: 48px;
-    cursor: pointer;
 }
 
 .points{
@@ -46,8 +45,8 @@ body
 
 .ball
 {
-    width: 38px;
-    height: 38px;
+    width: 36px;
+    height: 36px;
     border-radius: 20px;
     margin: 5px;
     border: 2px solid black;
