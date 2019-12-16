@@ -1,0 +1,28 @@
+{
+  "name": "kulki",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "dev": "webpack --mode development",
+    "prod": "webpack --mode production"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/LukaszKot/Kulki.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/LukaszKot/Kulki/issues"
+  },
+  "homepage": "https://github.com/LukaszKot/Kulki#readme",
+  "devDependencies": {
+    "install": "^0.13.0",
+    "npm": "^6.13.4",
+    "ts-loader": "^6.2.1",
+    "typescript": "^3.7.3",
+    "webpack": "^4.41.3",
+    "webpack-cli": "^3.3.10"
+  }
+}
