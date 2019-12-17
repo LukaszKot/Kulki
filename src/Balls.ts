@@ -9,6 +9,7 @@ export class Balls {
     private tab: Array<Array<string>> = [];
     private choosenBall: Point = null;
     private pathFinder: PathFinder;
+    private isFrozen: boolean = false;
     constructor() {
         this.generateEmptyTab();
         this.displayOnBoardNextBalls();
@@ -19,11 +20,37 @@ export class Balls {
     displayOnBoardNextBalls(): void {
         this.nextBallsColors.forEach((element: string): void => {
             var position: Point = this.randomizePosition();
-            this.tab[position.x][position.y] = element;
+            if (position == null) {
+                this.end();
+                return;
+            }
+            else {
+                this.tab[position.x][position.y] = element;
+            }
+
         });
+        if (!this.isFreePlace()) {
+            this.end();
+        }
+    }
+
+    private end(): void {
+        alert(`Zdobyłeś ${this.points} punktów!`);
+    }
+
+    private isFreePlace(): boolean {
+        for (let i: number = 0; i < this.n; i++) {
+            for (let j: number = 0; j < this.n; j++) {
+                if (this.tab[i][j] == "") return true;
+            }
+        }
+        return false;
     }
 
     randomizePosition(): Point {
+        if (!this.isFreePlace()) {
+            return null;
+        }
         let point: Point = new Point(Math.floor(Math.random() * 9), Math.floor(Math.random() * 9));
         if (this.tab[point.x][point.y] != "") {
             return this.randomizePosition();
@@ -70,6 +97,8 @@ export class Balls {
                     if (this.choosenBall == null) {
                         field.style.cursor = "pointer";
                         field.addEventListener("click", (e: MouseEvent): void => {
+                            if (this.isFrozen) return;
+                            if (this.isBallLocked(new Point(i, j))) return;
                             this.choosenBall = new Point(i, j);
                             this.render();
                         })
@@ -77,6 +106,8 @@ export class Balls {
                     else if (this.choosenBall.x != i && this.choosenBall.y != j) {
                         field.style.cursor = "pointer";
                         field.addEventListener("click", (e: MouseEvent): void => {
+                            if (this.isFrozen) return;
+                            if (this.isBallLocked(new Point(i, j))) return;
                             this.choosenBall = new Point(i, j);
                             this.render();
                         })
@@ -86,6 +117,7 @@ export class Balls {
                         field.style.cursor = "pointer";
                         field.style.backgroundColor = "red";
                         field.addEventListener("click", (e: MouseEvent): void => {
+                            if (this.isFrozen) return;
                             this.choosenBall = null;
                             this.render();
                         })
@@ -95,19 +127,38 @@ export class Balls {
                     field.style.cursor = "pointer";
                     let path: Array<Point>;
                     let move = (e: MouseEvent): void => {
+                        if (this.isFrozen) return;
                         if ((<HTMLElement>e.currentTarget).style.backgroundColor == "red") {
-                            this.tab[i][j] = this.tab[this.choosenBall.x][this.choosenBall.y];
-                            this.tab[this.choosenBall.x][this.choosenBall.y] = "";
-                            this.choosenBall = null;
-                            if (!this.checkPoints()) {
-                                this.displayOnBoardNextBalls();
-                                this.nextBallsColors = this.randomizeBalls();
-                            }
+                            path.push(new Point(i, j))
+                            path.push(this.choosenBall);
+                            path.forEach((element: Point): void => {
+                                let field: HTMLElement = (<HTMLElement>document.getElementsByClassName("field")[element.x * 9 + element.y]);
+                                field.style.backgroundColor = "#aaaaaa";
+                                if (element.x == this.choosenBall.x && element.y == this.choosenBall.y) {
+                                    let ball: HTMLElement = <HTMLElement>field.children[0];
+                                    ball.style.borderColor = "black";
+                                    field.removeChild(ball);
+                                    (<HTMLElement>document.getElementsByClassName("field")[i * 9 + j]).appendChild(ball);
+                                }
+                            });
+                            this.isFrozen = true;
+                            setTimeout((): void => {
+                                this.isFrozen = false;
+                                this.tab[i][j] = this.tab[this.choosenBall.x][this.choosenBall.y];
+                                this.tab[this.choosenBall.x][this.choosenBall.y] = "";
+                                this.choosenBall = null;
+                                if (!this.checkPoints()) {
+                                    this.displayOnBoardNextBalls();
+                                    this.nextBallsColors = this.randomizeBalls();
+                                }
 
-                            this.render();
+                                this.render();
+                            }, 500)
+
                         }
                     }
                     field.addEventListener("mouseenter", (e: MouseEvent): void => {
+                        if (this.isFrozen) return;
                         path = this.pathFinder.find(this.choosenBall, new Point(i, j));
                         path.push(new Point(i, j))
                         path.forEach((element: Point): void => {
@@ -116,6 +167,7 @@ export class Balls {
                         field.addEventListener("click", move);
                     })
                     field.addEventListener("mouseleave", (e: MouseEvent): void => {
+                        if (this.isFrozen) return;
                         path.forEach((element: Point): void => {
                             (<HTMLElement>document.getElementsByClassName("field")[element.x * 9 + element.y]).style.backgroundColor = "white";
                         });
@@ -129,180 +181,219 @@ export class Balls {
         document.body.appendChild(board);
     }
 
+    private isBallLocked(ball: Point): boolean {
+        let surrounded: number = 0;
+        if (this.tab[ball.x][ball.y + 1] != "") surrounded++;
+        if (this.tab[ball.x][ball.y - 1] != "") surrounded++;
+        if (this.tab[ball.x + 1] == null || this.tab[ball.x + 1][ball.y] != "") surrounded++;
+        if (this.tab[ball.x - 1] == null || this.tab[ball.x - 1][ball.y] != "") surrounded++;
+        return surrounded == 4;
+    }
+
     private checkPoints(): boolean {
-        let lastSaved: string = null;
+        let result: boolean = false;
+        let pointsToDelete: Array<Point> = [];
+        //rows
         for (let i: number = 0; i < this.n; i++) {
-            lastSaved = null;
             let combo: number = 0;
+            let currentColor: string = null;
             for (let j: number = 0; j < this.n; j++) {
-                if (this.tab[i][j] == lastSaved) {
-                    combo++;
-                }
-                else if (this.tab[i][j] != "") {
-                    if (combo >= 5) {
-                        this.points += combo;
-                        for (let k: number = j - combo; k < j; k++) {
-                            this.tab[i][k] = "";
+                if (this.tab[i][j] != "") {
+                    if (currentColor != this.tab[i][j]) {
+                        if (combo >= 5) {
+                            let k: number = j - combo;
+                            for (k; k < j; k++) {
+                                pointsToDelete.push(new Point(i, k))
+                            }
+                            this.points += combo;
+                            combo = 0;
+                            result = true;
                         }
-                        return true;
+                        combo = 1;
+                        currentColor = this.tab[i][j]
+
                     }
-                    combo = 1;
-                    lastSaved = this.tab[i][j];
+                    else if (currentColor == this.tab[i][j]) {
+                        combo++;
+                    }
                 }
                 else {
                     if (combo >= 5) {
-                        this.points += combo;
-                        for (let k: number = j - combo; k < j; k++) {
-                            this.tab[i][k] = "";
+                        let k: number = j - combo;
+                        for (k; k < j; k++) {
+                            pointsToDelete.push(new Point(i, k))
                         }
-                        return true;
+                        this.points += combo;
+                        result = true;
                     }
                     combo = 0;
-                    lastSaved = null;
+                    currentColor = null;
                 }
                 if (j == 8) {
                     if (combo >= 5) {
-                        this.points += combo;
-                        for (let k: number = j - combo + 1; k < j + 1; k++) {
-                            this.tab[i][k] = "";
+                        let k: number = j - combo + 1;
+                        for (k; k < j + 1; k++) {
+                            pointsToDelete.push(new Point(i, k))
                         }
-                        return true;
+                        this.points += combo;
+                        result = true;
                     }
                 }
             }
+
         }
 
+        //columns
         for (let i: number = 0; i < this.n; i++) {
-            lastSaved = null;
             let combo: number = 0;
+            let currentColor: string = null;
             for (let j: number = 0; j < this.n; j++) {
-                if (this.tab[j][i] == lastSaved) {
-                    combo++;
-                }
-                else if (this.tab[j][i] != "") {
-                    if (combo >= 5) {
-                        this.points += combo;
-                        for (let k: number = j - combo; k < j; k++) {
-                            this.tab[k][i] = "";
+                if (this.tab[j][i] != "") {
+                    if (currentColor != this.tab[j][i]) {
+                        if (combo >= 5) {
+                            let k: number = j - combo;
+                            for (k; k < j; k++) {
+                                pointsToDelete.push(new Point(k, i))
+                            }
+                            this.points += combo;
+                            combo = 0;
+                            result = true;
                         }
-                        return true;
+                        combo = 1;
+                        currentColor = this.tab[j][i]
+
                     }
-                    combo = 1;
-                    lastSaved = this.tab[j][i];
+                    else if (currentColor == this.tab[j][i]) {
+                        combo++;
+                    }
                 }
                 else {
                     if (combo >= 5) {
-                        this.points += combo;
-                        for (let k: number = j - combo; k < j; k++) {
-                            this.tab[k][i] = "";
+                        let k: number = j - combo;
+                        for (k; k < j; k++) {
+                            pointsToDelete.push(new Point(k, i))
                         }
-                        return true;
+                        this.points += combo;
+                        result = true;
                     }
                     combo = 0;
-                    lastSaved = null;
+                    currentColor = null;
                 }
                 if (j == 8) {
                     if (combo >= 5) {
-                        this.points += combo;
-                        for (let k: number = j - combo + 1; k < j + 1; k++) {
-                            this.tab[k][i] = "";
+                        let k: number = j - combo + 1;
+                        for (k; k < j + 1; k++) {
+                            pointsToDelete.push(new Point(k, i))
                         }
-                        return true;
+                        this.points += combo;
+                        result = true;
                     }
                 }
             }
         }
 
-        for (let i: number = -8; i < 8; i++) {
-            lastSaved = null;
+        //y=x
+        for (let i: number = -4; i < 5; i++) {
             let combo: number = 0;
+            let currentColor: string = null;
             for (let j: number = 0; j < this.n; j++) {
-                if (this.tab[j][j + i] == lastSaved && this.tab[j][j + i] != null) {
-                    combo++;
-                }
-                else if (this.tab[j][j + i] != "") {
-                    if (combo >= 5) {
-                        this.points += combo;
-                        for (let k: number = j - combo; k < j; k++) {
-                            this.tab[k][k + i] = "";
+                if (this.tab[j][j + i] != "") {
+                    if (currentColor != this.tab[j][j + i]) {
+                        if (combo >= 5) {
+                            let k: number = j - combo;
+                            for (k; k < j; k++) {
+                                pointsToDelete.push(new Point(k, k + i))
+                            }
+                            this.points += combo;
+                            combo = 0;
+                            result = true;
                         }
-                        return true;
+                        combo = 1;
+                        currentColor = this.tab[j][j + i]
                     }
-                    combo = 1;
-                    lastSaved = this.tab[j][j + i];
+                    else if (currentColor == this.tab[j][j + i]) {
+                        combo++;
+                    }
                 }
                 else {
                     if (combo >= 5) {
-                        this.points += combo;
-                        for (let k: number = j - combo; k < j; k++) {
-                            this.tab[k][k + i] = "";
+                        let k: number = j - combo;
+                        for (k; k < j; k++) {
+                            pointsToDelete.push(new Point(k, k + i))
                         }
-                        return true;
+                        this.points += combo;
+                        result = true;
                     }
                     combo = 0;
-                    lastSaved = null;
+                    currentColor = null;
                 }
                 if (j == 8) {
                     if (combo >= 5) {
-                        this.points += combo;
-                        for (let k: number = j - combo + 1; k < j + 1; k++) {
-                            this.tab[j][j + i] = "";
+                        let k: number = j - combo + 1;
+                        for (k; k < j + 1; k++) {
+                            pointsToDelete.push(new Point(k, k + i))
                         }
-                        return true;
+                        this.points += combo;
+                        result = true;
                     }
                 }
             }
         }
 
-        for (let i: number = -8; i < 8; i++) {
-            lastSaved = null;
+        //y=-x
+
+        for (let i: number = 4; i < 13; i++) {
             let combo: number = 0;
+            let currentColor: string = null;
             for (let j: number = 0; j < this.n; j++) {
-                if (this.tab[j][-j + i] == lastSaved && this.tab[j][-j + i] != null) {
-                    if (combo >= 5) {
-                        this.points += combo;
-                        for (let k: number = j - combo; k < j; k++) {
-                            this.tab[k][-k + i] = "";
+                if (this.tab[j][-j + i] != "") {
+                    if (currentColor != this.tab[j][-j + i]) {
+                        if (combo >= 5) {
+                            let k: number = j - combo;
+                            for (k; k < j; k++) {
+                                pointsToDelete.push(new Point(k, -k + i))
+                            }
+                            this.points += combo;
+                            combo = 0;
+                            result = true;
                         }
-                        return true;
+                        combo = 1;
+                        currentColor = this.tab[j][-j + i]
                     }
-                    combo++;
-                }
-                else if (this.tab[j][-j + i] != "") {
-                    if (combo >= 5) {
-                        this.points += combo;
-                        for (let k: number = j - combo; k < j; k++) {
-                            this.tab[k][-k + i] = "";
-                        }
-                        return true;
+                    else if (currentColor == this.tab[j][-j + i]) {
+                        combo++;
                     }
-                    combo = 1;
-                    lastSaved = this.tab[j][-j + i];
                 }
                 else {
                     if (combo >= 5) {
-                        this.points += combo;
-                        for (let k: number = j - combo; k < j; k++) {
-                            this.tab[k][-k + i] = "";
+                        let k: number = j - combo;
+                        for (k; k < j; k++) {
+                            pointsToDelete.push(new Point(k, -k + i))
                         }
-                        return true;
+                        this.points += combo;
+                        result = true;
                     }
                     combo = 0;
-                    lastSaved = null;
+                    currentColor = null;
                 }
                 if (j == 8) {
                     if (combo >= 5) {
-                        this.points += combo;
-                        for (let k: number = j - combo + 1; k < j + 1; k++) {
-                            this.tab[j][-j + i] = "";
+                        let k: number = j - combo + 1;
+                        for (k; k < j + 1; k++) {
+                            pointsToDelete.push(new Point(k, -k + i))
                         }
-                        return true;
+                        this.points += combo;
+                        result = true;
                     }
                 }
             }
         }
 
-        return false;
+        pointsToDelete.forEach((element: Point): void => {
+            this.tab[element.x][element.y] = "";
+        });
+
+        return result;
     }
 
 
